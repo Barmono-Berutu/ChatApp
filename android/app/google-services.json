@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1074563289875",
+    "project_id": "pesanapp-aab69",
+    "storage_bucket": "pesanapp-aab69.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074563289875:android:3553d127b4ffe784ea40e6",
+        "android_client_info": {
+          "package_name": "com.example.chat_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEkBqxTctIJrIcgy-dTZjfbH2p2kHaS38"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
