@@ -31,9 +31,6 @@ class Home extends StatelessWidget {
             if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
             }
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              return Text('No users found');
-            }
 
             List<DocumentSnapshot> users = snapshot.data!.docs;
 
@@ -44,9 +41,13 @@ class Home extends StatelessWidget {
                     users[index].data() as Map<String, dynamic>;
                 String email = data['email'] ?? 'No email found';
 
-                return ListTile(
-                  title: Text(email),
-                );
+                if (email == FirebaseAuth.instance.currentUser?.email) {
+                  return ListTile(
+                    title: Text(email),
+                  );
+                } else {
+                  return SizedBox.shrink();
+                }
               },
             );
           },
