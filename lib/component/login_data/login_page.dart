@@ -6,25 +6,21 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-class RegisPage extends StatelessWidget {
+class LoginPage extends StatelessWidget {
   final void Function()? onPressed;
-  RegisPage({super.key, required this.onPressed});
+  LoginPage({super.key, required this.onPressed});
 
   final TextEditingController _username = TextEditingController();
   final TextEditingController _pass = TextEditingController();
-  final TextEditingController _passK = TextEditingController();
-
-  void regis() async {
-    if (_pass.text == _passK.text) {
-      UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-              email: _username.text, password: _pass.text);
-
-      FirebaseFirestore.instance
-          .collection("UserEmail")
-          .doc(userCredential.user?.uid)
-          .set({'email': _username.text, 'id': userCredential.user?.uid});
-    }
+  void Login() async {
+    UserCredential userCredential = await FirebaseAuth.instance
+        .signInWithEmailAndPassword(
+            email: _username.text, password: _pass.text);
+    FirebaseFirestore.instance
+        .collection("UserEmail")
+        .doc(userCredential.user?.uid)
+        .set({'email': _username.text, 'id': userCredential.user?.uid},
+            SetOptions(merge: true));
   }
 
   @override
@@ -67,12 +63,6 @@ class RegisPage extends StatelessWidget {
                   hintText: 'Password',
                   obscureText: true,
                 ),
-                const SizedBox(height: 10),
-                MyTextField(
-                  controller: _passK,
-                  hintText: 'Konfirmasi Password',
-                  obscureText: true,
-                ),
 
                 const SizedBox(height: 10),
 
@@ -92,7 +82,10 @@ class RegisPage extends StatelessWidget {
                 const SizedBox(height: 10),
 
                 // sign in button
-                MyButton(onTap: regis, title: "Registrasi"),
+                MyButton(
+                  title: "Login",
+                  onTap: Login,
+                ),
                 const SizedBox(height: 25),
                 // or continue with
                 Padding(
@@ -142,13 +135,13 @@ class RegisPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Have account?',
+                      'Not a member?',
                     ),
                     const SizedBox(width: 4),
                     GestureDetector(
                       onTap: onPressed,
                       child: const Text(
-                        'Login now',
+                        'Register now',
                         style: TextStyle(
                           color: Colors.purple,
                           fontWeight: FontWeight.bold,

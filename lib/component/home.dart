@@ -1,58 +1,145 @@
+import 'package:chat_app/component/addChat.dart';
+import 'package:chat_app/component/chat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
   const Home({super.key});
 
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  int _selectedIndex = 0;
   void logOut() async {
     await FirebaseAuth.instance.signOut();
   }
 
+  String capitalize(String s) {
+    if (s.isEmpty) {
+      return s;
+    }
+    return s[0].toUpperCase() + s.substring(1);
+  }
+
   @override
   Widget build(BuildContext context) {
+    String currentUserEmail = FirebaseAuth.instance.currentUser!.email!;
+
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        title: Text("sadsad"),
-        actions: [IconButton(onPressed: logOut, icon: Icon(Icons.logout))],
+        automaticallyImplyLeading: false,
+        backgroundColor: Color(0xFF00BF6D),
+        foregroundColor: Colors.white,
+        title: Text("Chat App"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {},
+          ),
+          Menu()
+        ],
       ),
+      floatingActionButton: FloatingActionButton(
+          child: Icon(
+            Icons.person_add_alt_1,
+          ),
+          foregroundColor: Colors.white,
+          backgroundColor: Color(0xFF00BF6D),
+          onPressed: () {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => AddChat(),
+            ));
+          }),
+      bottomNavigationBar: buildBottomNavigationBar(),
       body: Container(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
         child: StreamBuilder<QuerySnapshot?>(
-          stream:
-              FirebaseFirestore.instance.collection("UserEmail").snapshots(),
-          builder:
-              (BuildContext context, AsyncSnapshot<QuerySnapshot?> snapshot) {
+          stream: FirebaseFirestore.instance
+              .collection('chats')
+              .where('participants', arrayContains: currentUserEmail)
+              .snapshots(),
+          builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
+              return Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
+              return Center(child: Text('Error: ${snapshot.error}'));
             }
 
-            List<DocumentSnapshot> users = snapshot.data!.docs;
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Center(child: Text("No Chats Yet"));
+            }
+
+            List<DocumentSnapshot> chats = snapshot.data!.docs;
 
             return ListView.builder(
-              itemCount: users.length,
+              itemCount: chats.length,
               itemBuilder: (context, index) {
                 Map<String, dynamic> data =
-                    users[index].data() as Map<String, dynamic>;
-                String email = data['email'] ?? 'No email found';
+                    chats[index].data() as Map<String, dynamic>;
+                String peerEmail = (data['participants'] as List<dynamic>)
+                    .firstWhere((email) => email != currentUserEmail);
 
-                if (email == FirebaseAuth.instance.currentUser?.email) {
-                  return ListTile(
-                    title: Text(email),
-                  );
-                } else {
-                  return SizedBox.shrink();
-                }
+                return ListTile(
+                  subtitle: Text(data["lastMessage"]),
+                  leading: CircleAvatar(
+                    radius: 24,
+                    backgroundImage: AssetImage("lib/images/user.png"),
+                  ),
+                  title: Text(capitalize(peerEmail.split('@')[0])),
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => ChatPage(peerEmail: peerEmail),
+                    ));
+                  },
+                );
               },
             );
           },
         ),
       ),
+    );
+  }
+
+  BottomNavigationBar buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      fixedColor: Color(0xFF00BF6D),
+      type: BottomNavigationBarType.fixed,
+      currentIndex: _selectedIndex,
+      onTap: (value) {
+        setState(() {
+          _selectedIndex = value;
+        });
+      },
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.messenger), label: "Chats"),
+        BottomNavigationBarItem(icon: Icon(Icons.people), label: "People"),
+        BottomNavigationBarItem(icon: Icon(Icons.call), label: "Calls"),
+        BottomNavigationBarItem(
+          icon: CircleAvatar(
+            radius: 14,
+            backgroundImage: AssetImage("lib/images/user.png"),
+          ),
+          label: "Profile",
+        ),
+      ],
+    );
+  }
+
+  Widget Menu() {
+    return PopupMenuButton(
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          child: Text("Logout"),
+          onTap: () {
+            FirebaseAuth.instance.signOut();
+          },
+        )
+      ],
     );
   }
 }
